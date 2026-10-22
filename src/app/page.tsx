@@ -680,29 +680,35 @@ export default function Home() {
           // Bottom wall: Miss ball / lose life
           if (by - ballRadius > CANVAS_HEIGHT) {
             playLoseLifeSound();
+            let isGameOver = false;
+
             setLives((prevLives) => {
               const newLives = prevLives - 1;
               if (newLives <= 0) {
-                // Game Over - Mission Failed (Stop measuring time / Fail screen)
+                isGameOver = true;
                 setGameResult('failure');
                 if (bgmRef.current) bgmRef.current.pause();
-              } else {
-                // 중간에 죽었을 때는 카운트다운 없이 즉시 공을 패들 위에서 재발사
-                const currentPaddleX = paddleXRef.current;
-                ballPosRef.current = {
-                  x: currentPaddleX + paddleWidth / 2,
-                  y: paddleY - ballRadius - 5,
-                };
-                const angle = (Math.random() * 40 - 20) * (Math.PI / 180); // -20 to +20도
-                const speed = 6.2;
-                ballVelRef.current = {
-                  vx: Math.sin(angle) * speed,
-                  vy: -Math.cos(angle) * speed,
-                };
-                ballStuckRef.current = false;
               }
               return newLives;
             });
+
+            if (!isGameOver) {
+              // 발판(패들) 위로 공 즉시 위치 이동 및 위쪽으로 재발사
+              const currentPaddleX = paddleXRef.current;
+              bx = currentPaddleX + paddleWidth / 2;
+              by = paddleY - ballRadius - 4;
+              ballPosRef.current = { x: bx, y: by };
+
+              const angle = (Math.random() * 40 - 20) * (Math.PI / 180); // -20 to +20도
+              const speed = 6.2;
+              ballVelRef.current = {
+                vx: Math.sin(angle) * speed,
+                vy: -Math.cos(angle) * speed,
+              };
+              ballStuckRef.current = false;
+            } else {
+              return;
+            }
           }
 
           // Brick collision detection
